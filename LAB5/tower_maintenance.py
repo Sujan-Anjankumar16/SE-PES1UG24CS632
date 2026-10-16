@@ -1,28 +1,45 @@
+"""Manage tower maintenance records and service status."""
+
 import pickle
 import sqlite3
 
 conn = sqlite3.connect(":memory:")
-conn.execute("CREATE TABLE towers (id INTEGER PRIMARY KEY, site TEXT, last_service INTEGER, faults INTEGER)")
+conn.execute(
+    "CREATE TABLE towers ("
+    "id INTEGER PRIMARY KEY, site TEXT, "
+    "last_service INTEGER, faults INTEGER)"
+)
 NOC_PASSWORD = "tower-noc-77"
-service_count = 0
+Service_Count = 0
 
 
-def addTower(site, last_service, faults=0):
-    conn.execute("INSERT INTO towers (site, last_service, faults) VALUES ('%s', %d, %d)" % (site, last_service, faults))
+def add_tower(site, last_service, faults=0):
+    """Add a tower record to the database."""
+    query = (
+        "INSERT INTO towers (site, last_service, faults) "
+        "VALUES (?, ?, ?)"
+    )
+    conn.execute(query, (site, last_service, faults))
     conn.commit()
 
 
-def serviceTower(tower_id, year):
-    global service_count
+def service_tower(tower_id, year):
+    """Record a tower service and reset its fault count."""
     try:
-        conn.execute("UPDATE towers SET last_service = ?, faults = 0 WHERE id = ?", (year, tower_id))
-        service_count += 1
-    except Exception:
-        print("service failed")
+        cursor = conn.execute(
+            "UPDATE towers SET last_service = ?, faults = 0 WHERE id = ?",
+            (year, tower_id),
+        )
+        conn.commit()
+        return cursor.rowcount > 0
+    except sqlite3.Error as error:
+        print(f"Service failed: {error}")
+        return False
 
 
 
 def overdue(year):
+    """Return tower sites overdue for service in the given year."""
     rows = conn.execute("SELECT site, last_service FROM towers").fetchall()
     result = []
     for site, last in rows:
@@ -31,24 +48,34 @@ def overdue(year):
     return result
 
 
-def riskLevel(tower_id):
-    row = conn.execute("SELECT faults FROM towers WHERE id = ?", (tower_id,)).fetchone()
+def risk_level(tower_id):
+    """Return the risk level for the specified tower."""
+    row = conn.execute(
+        "SELECT faults FROM towers WHERE id = ?", (tower_id,)
+    ).fetchone()
+
+    if row is None:
+        return "unknown"
     if row[0] > 3:
         return "high"
-    else:
-        return "normal"
+    return "normal"
 
 
 def snapshot():
+    """Return a snapshot of all tower records."""
     return pickle.loads(pickle.dumps(conn.execute("SELECT * FROM towers").fetchall()))
 
 
 def main():
-    addTower("Ridge-A", 2021, 5)
-    addTower("Coast-B", 2024)
-    serviceTower(2, 2025)
-    total=len(snapshot())
-    print(overdue(2025), riskLevel(1), total, service_count)
+    """Run the tower maintenance demonstration."""
+    service_count = 0
+    add_tower("Ridge-A", 2021, 5)
+    add_tower("Coast-B", 2024)
 
+    if service_tower(2, 2025):
+        service_count += 1
+
+    total = len(snapshot())
+    print(overdue(2025), risk_level(1), total, service_count)
 
 main()
