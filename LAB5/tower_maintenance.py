@@ -37,7 +37,6 @@ def service_tower(tower_id, year):
         return False
 
 
-
 def overdue(year):
     """Return tower sites overdue for service in the given year."""
     rows = conn.execute("SELECT site, last_service FROM towers").fetchall()
@@ -77,5 +76,6 @@ def main():
 
     total = len(snapshot())
     print(overdue(2025), risk_level(1), total, service_count)
+
 
 main()
