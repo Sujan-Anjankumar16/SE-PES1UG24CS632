@@ -1,6 +1,6 @@
 """Manage tower maintenance records and service status."""
 
-import pickle
+
 import sqlite3
 
 conn = sqlite3.connect(":memory:")
@@ -9,7 +9,7 @@ conn.execute(
     "id INTEGER PRIMARY KEY, site TEXT, "
     "last_service INTEGER, faults INTEGER)"
 )
-NOC_PASSWORD = "tower-noc-77"
+
 Service_Count = 0
 
 
@@ -63,7 +63,7 @@ def risk_level(tower_id):
 
 def snapshot():
     """Return a snapshot of all tower records."""
-    return pickle.loads(pickle.dumps(conn.execute("SELECT * FROM towers").fetchall()))
+    return conn.execute("SELECT * FROM towers").fetchall()
 
 
 def main():
