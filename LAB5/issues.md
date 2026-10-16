@@ -1,79 +1,14 @@
-  -------------------------------------------------------------------------------------------
-  Issue             Type                        Line(s) Description       Fix Approach
-  ----------------- ----------------- ----------------- ----------------- -------------------
-  SQL injection     Security                     18--22 The INSERT        Use a parameterized
-  risk                                                  statement now     query with ?, then
-                                                        uses placeholders pass values
-                                                        rather than       separately to
-                                                        inserting values  conn.execute().
-                                                        directly into SQL 
-                                                        text.             
+# Lab 5 — Static Code Analysis Issue Table
 
-  Unsafe pickle     Security                     63--65 The snapshot      Remove pickle and
-  deserialization                                       function no       return fetchall()
-                                                        longer uses       results directly.
-                                                        pickle.loads() or 
-                                                        pickle.dumps();   
-                                                        it returns query  
-                                                        results directly. 
-
-  Hardcoded         Security                      4--13 The final code    Remove the unused
-  password                                              has no hardcoded  hardcoded
-                                                        password; the old credential from the
-                                                        NOC_PASSWORD      source.
-                                                        value has been    
-                                                        removed.          
-
-  Specific          Code quality                 35--37 The service       Catch the
-  exception                                             operation catches database-specific
-  handling                                              sqlite3.Error     exception and
-                                                        rather than a     return False if the
-                                                        broad Exception.  operation fails.
-
-  Missing-row       Bug prevention               52--57 risk_level()      Return "unknown"
-  handling                                              checks whether    when the tower ID
-                                                        the query         does not exist.
-                                                        returned None     
-                                                        before accessing  
-                                                        row\[0\].         
-
-  Function naming   Code quality        16, 26, 40, 50, Function names    Rename camelCase
-  convention                                     63, 68 use snake_case,   functions to
-                                                        such as           snake_case and
-                                                        add_tower,        update their call
-                                                        service_tower,    sites.
-                                                        and risk_level.   
-
-  Long SQL          Formatting           7--11, 29--32, SQL statements    Use parenthesized
-  statements                                     52--54 and function      strings and
-                                                        calls are split   multiline function
-                                                        across multiple   calls.
-                                                        lines for         
-                                                        readability and   
-                                                        line-length       
-                                                        compliance.       
-
-  Unnecessary else  Code quality                 58--60 risk_level()      Return "normal"
-  after return                                          returns from the  after the if block.
-                                                        if branch and     
-                                                        then returns the  
-                                                        normal value      
-                                                        directly, without 
-                                                        an unnecessary    
-                                                        else.             
-
-  Unnecessary       Maintainability              63--65 SQLite fetchall() Return the query
-  pickle copy                                           already returns   result directly.
-                                                        the rows needed   
-                                                        by the caller;    
-                                                        serializing and   
-                                                        deserializing     
-                                                        them is           
-                                                        unnecessary.      
-
-  Documented        Code quality        16--17, 26--27, Each function has Add concise
-  functions                             40--41, 50--51, a short docstring docstrings to the
-                                         63--64, 68--69 describing its    module and
-                                                        purpose.          functions.
-  -------------------------------------------------------------------------------------------
-
+| Issue | Type | Line(s) | Description | Fix Approach |
+|---|---|---|---|---|
+| SQL injection risk | Security | 18–22 | The INSERT statement now uses placeholders rather than inserting values directly into SQL text. | Use a parameterized query with `?`, then pass values separately to `conn.execute()`. |
+| Unsafe pickle deserialization | Security | 63–65 | The snapshot function no longer uses `pickle.loads()` or `pickle.dumps()`; it returns query results directly. | Remove `pickle` and return `fetchall()` results directly. |
+| Hardcoded password | Security | 4–13 | The final code has no hardcoded password; the old `NOC_PASSWORD` value has been removed. | Remove the unused hardcoded credential from the source. |
+| Specific exception handling | Code quality | 35–37 | The service operation catches `sqlite3.Error` rather than a broad `Exception`. | Catch the database-specific exception and return `False` if the operation fails. |
+| Missing-row handling | Bug prevention | 52–57 | `risk_level()` checks whether the query returned `None` before accessing `row[0]`. | Return `"unknown"` when the tower ID does not exist. |
+| Function naming convention | Code quality | 16, 26, 40, 50, 63, 68 | Function names use snake_case, such as `add_tower`, `service_tower`, and `risk_level`. | Use snake_case for function names and update their call sites. |
+| Long SQL statements | Formatting | 7–11, 29–32, 52–54 | SQL statements and function calls are split across multiple lines for readability and line-length compliance. | Use parenthesized strings and multiline function calls. |
+| Unnecessary else | Code quality | 58–60 | `risk_level()` returns directly after the `if` block, without an unnecessary `else`. | Return `"normal"` after the `if` block. |
+| Unnecessary serialization | Maintainability | 63–65 | SQLite query results are returned directly; serializing and deserializing them is unnecessary. | Remove the unnecessary pickle serialization and deserialization. |
+| Missing docstrings | Code quality | 16–17, 26–27, 40–41, 50–51, 63–64, 68–69 | Functions have concise docstrings describing their purpose. | Add a short docstring to each function describing its purpose. |
